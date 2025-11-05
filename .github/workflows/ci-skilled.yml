@@ -31,7 +31,7 @@ jobs:
         python Eksperimen_SML_DindaMaulidiyah/preprocessing/automate_DindaMaulidiyah.py
         
     - name: Upload preprocessing artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: preprocessed-data
         path: Eksperimen_SML_DindaMaulidiyah/preprocessing/WineRed_preprocessing/winequality_preprocessed.csv
@@ -57,7 +57,7 @@ jobs:
         pip install mlflow==2.19.0
         
     - name: Download preprocessing artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: preprocessed-data
         path: Workflow-CI/MLProject/WineRed_preprocessing/
@@ -90,7 +90,7 @@ jobs:
         echo "Latest MLflow run ID: $RUN_ID"
         
     - name: Upload model artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: model-artifacts-skilled
         path: |
@@ -108,7 +108,7 @@ jobs:
     # Artifacts are stored in GitHub Actions artifacts storage
     - name: Upload to GitHub Artifacts
       if: success()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: mlflow-artifacts-skilled
         path: |
