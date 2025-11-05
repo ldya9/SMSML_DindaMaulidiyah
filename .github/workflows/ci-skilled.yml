@@ -1,4 +1,4 @@
-name: CI/CD Pipeline - Skilled
+name: CI/CD Pipeline - Skilled (MLflow Project)
 
 on:
   push:
@@ -28,17 +28,17 @@ jobs:
         
     - name: Run preprocessing
       run: |
-        python preprocessing/automate_DindaMaulidiyah.py
+        python Eksperimen_SML_DindaMaulidiyah/preprocessing/automate_DindaMaulidiyah.py
         
     - name: Upload preprocessing artifacts
       uses: actions/upload-artifact@v3
       with:
         name: preprocessed-data
-        path: preprocessing/WineRed_preprocessing/winequality_preprocessed.csv
+        path: Eksperimen_SML_DindaMaulidiyah/preprocessing/WineRed_preprocessing/winequality_preprocessed.csv
         retention-days: 7
 
   modelling:
-    name: Model Training - Skilled (Hyperparameter Tuning)
+    name: Model Training - Skilled (MLflow Project with Hyperparameter Tuning)
     runs-on: ubuntu-latest
     needs: preprocessing
     
@@ -51,50 +51,51 @@ jobs:
       with:
         python-version: '3.12.7'
         
-    - name: Install dependencies
+    - name: Install MLflow
       run: |
         python -m pip install --upgrade pip
-        pip install -r Membangun_model/requirements.txt
+        pip install mlflow==2.19.0
         
     - name: Download preprocessing artifacts
       uses: actions/download-artifact@v3
       with:
         name: preprocessed-data
-        path: Membangun_model/WineRed_preprocessing/
+        path: Workflow-CI/WineRed_preprocessing/
         
-    - name: Setup MLflow (local file store)
+    - name: Check Env
       run: |
-        mkdir -p Membangun_model/mlruns
+        echo "Python version: $(python --version)"
+        echo "MLflow version: $(mlflow --version)"
+        echo "Working directory: $(pwd)"
         
-    - name: Modify modelling_tuning.py for CI/CD
+    - name: Set MLflow Tracking URI
       run: |
-        # Update MLflow tracking URI untuk CI/CD (file store)
-        python -c "
-        import re
-        with open('Membangun_model/modelling_tuning.py', 'r') as f:
-            content = f.read()
-        content = re.sub(
-            r'mlflow\.set_tracking_uri\("http://127\.0\.0\.1:5000/"\)',
-            'mlflow.set_tracking_uri(\"file:./mlruns\")',
-            content
-        )
-        with open('Membangun_model/modelling_tuning.py', 'w') as f:
-            f.write(content)
-        print('MLflow tracking URI updated for CI/CD')
-        "
+        export MLFLOW_TRACKING_URI="file:./mlruns"
+        echo "MLFLOW_TRACKING_URI=$MLFLOW_TRACKING_URI" >> $GITHUB_ENV
         
-    - name: Run modelling with hyperparameter tuning
+    - name: Run mlflow project
+      working-directory: Workflow-CI
       run: |
-        cd Membangun_model
-        python modelling_tuning.py
+        mlflow run . --entry-point skilled \
+          -P mlflow_tracking_uri="file:./mlruns" \
+          -P data_path="WineRed_preprocessing/winequality_preprocessed.csv"
+        
+    - name: Get latest MLflow run_id
+      id: get_run_id
+      working-directory: Workflow-CI
+      run: |
+        # Get the latest run ID from mlruns
+        RUN_ID=$(ls -t mlruns/*/ | grep -E '^[0-9a-f-]{36}$' | head -1)
+        echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
+        echo "Latest MLflow run ID: $RUN_ID"
         
     - name: Upload model artifacts
       uses: actions/upload-artifact@v3
       with:
         name: model-artifacts-skilled
         path: |
-          Membangun_model/mlruns/
-          Membangun_model/mlartifacts/
+          Workflow-CI/mlruns/
+          Workflow-CI/mlartifacts/
         retention-days: 30
         
     - name: Upload to GitHub
@@ -103,15 +104,15 @@ jobs:
         echo "Model training with hyperparameter tuning completed successfully!"
         echo "Artifacts have been uploaded to GitHub Actions artifacts"
         
-    # Optional: Upload to Google Drive (requires secrets)
-    # Uncomment dan configure jika ingin upload ke Google Drive
-    # - name: Upload to Google Drive
-    #   if: success()
-    #   uses: wangyixian2008/google-drive-upload-action@v1.0.0
-    #   with:
-    #     skip-on-no-changes: false
-    #     folder-id: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
-    #     credentials: ${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}
-    #     source: Membangun_model/mlruns/
-    #     destination: mlflow-artifacts/
+    # Upload to GitHub (as alternative to Google Drive)
+    # Artifacts are stored in GitHub Actions artifacts storage
+    - name: Upload to GitHub Artifacts
+      if: success()
+      uses: actions/upload-artifact@v3
+      with:
+        name: mlflow-artifacts-skilled
+        path: |
+          Workflow-CI/mlruns/
+          Workflow-CI/mlartifacts/
+        retention-days: 90
 

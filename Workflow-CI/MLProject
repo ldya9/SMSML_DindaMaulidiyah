@@ -1,0 +1,25 @@
+name: Wine_Quality_Classification_MLProject
+
+entry_points:
+  basic:
+    command: "python modelling.py"
+    parameters:
+      data_path:
+        default: "WineRed_preprocessing/winequality_preprocessed.csv"
+        type: str
+      mlflow_tracking_uri:
+        default: "file:./mlruns"
+        type: str
+  
+  skilled:
+    command: "python modelling_tuning.py"
+    parameters:
+      data_path:
+        default: "WineRed_preprocessing/winequality_preprocessed.csv"
+        type: str
+      mlflow_tracking_uri:
+        default: "file:./mlruns"
+        type: str
+
+conda_env: conda.yaml
+
