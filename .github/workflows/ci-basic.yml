@@ -60,7 +60,7 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: preprocessed-data
-        path: Workflow-CI/WineRed_preprocessing/
+        path: Workflow-CI/MLProject/WineRed_preprocessing/
         
     - name: Check Env
       run: |
@@ -74,7 +74,7 @@ jobs:
         echo "MLFLOW_TRACKING_URI=$MLFLOW_TRACKING_URI" >> $GITHUB_ENV
         
     - name: Run mlflow project
-      working-directory: Workflow-CI
+      working-directory: Workflow-CI/MLProject
       run: |
         mlflow run . --entry-point basic \
           -P mlflow_tracking_uri="file:./mlruns" \
@@ -82,7 +82,7 @@ jobs:
         
     - name: Get latest MLflow run_id
       id: get_run_id
-      working-directory: Workflow-CI
+      working-directory: Workflow-CI/MLProject
       run: |
         # Get the latest run ID from mlruns
         RUN_ID=$(ls -t mlruns/*/ | grep -E '^[0-9a-f-]{36}$' | head -1)
@@ -94,8 +94,8 @@ jobs:
       with:
         name: model-artifacts-basic
         path: |
-          Workflow-CI/mlruns/
-          Workflow-CI/mlartifacts/
+          Workflow-CI/MLProject/mlruns/
+          Workflow-CI/MLProject/mlartifacts/
         retention-days: 30
         
     - name: Upload to GitHub
