@@ -43,7 +43,18 @@ pip install prometheus-client flask psutil requests mlflow
 
 **Windows:**
 1. Download dari: https://prometheus.io/download/
-2. Extract dan jalankan `prometheus.exe`
+   - Pilih: `prometheus-2.xx.x.windows-amd64.zip`
+2. Extract ke folder (contoh: `C:\prometheus`)
+3. Copy file `prometheus.yml` dari folder ini ke folder Prometheus:
+   ```powershell
+   Copy-Item "Monitoring dan Logging\prometheus.yml" "C:\prometheus\prometheus.yml" -Force
+   ```
+4. Jalankan Prometheus:
+   ```powershell
+   cd C:\prometheus
+   .\prometheus.exe --config.file=prometheus.yml
+   ```
+   **Lihat file `SETUP_WINDOWS.md` untuk detail lengkap!**
 
 **Linux/Mac:**
 ```bash
