@@ -52,13 +52,13 @@ def check_health():
     try:
         response = requests.get(HEALTH_URL, timeout=5)
         if response.status_code == 200:
-            print("✅ Model server is healthy")
+            print("Model server is healthy")
             return True
         else:
-            print(f"❌ Model server health check failed: {response.status_code}")
+            print(f"Model server health check failed: {response.status_code}")
             return False
     except Exception as e:
-        print(f"❌ Cannot connect to model server: {e}")
+        print(f"Cannot connect to model server: {e}")
         print("   Make sure prometheus_exporter.py is running!")
         return False
 
@@ -76,13 +76,13 @@ def send_inference_request(features):
         
         if response.status_code == 200:
             result = response.json()
-            print(f"✅ Prediction: {result.get('prediction', 'N/A')}, Latency: {latency:.3f}s")
+            print(f"Prediction: {result.get('prediction', 'N/A')}, Latency: {latency:.3f}s")
             return True, latency
         else:
-            print(f"❌ Request failed: {response.status_code} - {response.text}")
+            print(f"Request failed: {response.status_code} - {response.text}")
             return False, latency
     except Exception as e:
-        print(f"❌ Request error: {e}")
+        print(f"Request error: {e}")
         return False, 0
 
 def main():
@@ -96,11 +96,11 @@ def main():
     
     # Check health first
     if not check_health():
-        print("\n⚠️  Please start prometheus_exporter.py first!")
+        print("\nPlease start prometheus_exporter.py first!")
         print("   Command: python prometheus_exporter.py")
         return
     
-    print("\n🚀 Starting inference requests...")
+    print("\nStarting inference requests...")
     print("   Press Ctrl+C to stop\n")
     
     request_count = 0
@@ -121,7 +121,7 @@ def main():
             # Print summary setiap 10 requests
             if request_count % 10 == 0:
                 success_rate = (success_count / request_count) * 100
-                print(f"\n📊 Summary: {request_count} requests, {success_count} successful ({success_rate:.1f}%)")
+                print(f"\nSummary: {request_count} requests, {success_count} successful ({success_rate:.1f}%)")
                 print("   Check Prometheus at http://127.0.0.1:9090 to see metrics\n")
             
             # Wait sebelum request berikutnya
