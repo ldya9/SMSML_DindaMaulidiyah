@@ -51,16 +51,33 @@ jobs:
       with:
         python-version: '3.12.7'
         
-    - name: Install MLflow
+    - name: Install MLflow and Conda
       run: |
         python -m pip install --upgrade pip
         pip install mlflow==2.19.0
+        # Install miniconda untuk MLflow Project
+        wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+        bash miniconda.sh -b -p $HOME/miniconda
+        export PATH="$HOME/miniconda/bin:$PATH"
+        conda --version
         
     - name: Download preprocessing artifacts
       uses: actions/download-artifact@v4
       with:
         name: preprocessed-data
         path: Workflow-CI/MLProject/WineRed_preprocessing/
+        
+    - name: Verify dataset file exists
+      working-directory: Workflow-CI/MLProject
+      run: |
+        ls -la WineRed_preprocessing/
+        if [ -f "WineRed_preprocessing/winequality_preprocessed.csv" ]; then
+          echo "✅ Dataset file found!"
+          wc -l WineRed_preprocessing/winequality_preprocessed.csv
+        else
+          echo "❌ Dataset file not found!"
+          exit 1
+        fi
         
     - name: Check Env
       run: |
@@ -70,12 +87,15 @@ jobs:
         
     - name: Set MLflow Tracking URI
       run: |
+        export PATH="$HOME/miniconda/bin:$PATH"
         export MLFLOW_TRACKING_URI="file:./mlruns"
         echo "MLFLOW_TRACKING_URI=$MLFLOW_TRACKING_URI" >> $GITHUB_ENV
+        echo "PATH=$PATH" >> $GITHUB_ENV
         
     - name: Run mlflow project
       working-directory: Workflow-CI/MLProject
       run: |
+        export PATH="$HOME/miniconda/bin:$PATH"
         mlflow run . --entry-point skilled \
           -P mlflow_tracking_uri="file:./mlruns" \
           -P data_path="WineRed_preprocessing/winequality_preprocessed.csv"
