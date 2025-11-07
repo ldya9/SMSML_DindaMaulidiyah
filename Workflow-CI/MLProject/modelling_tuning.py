@@ -346,11 +346,12 @@ def main():
     print(classification_report(y_test, y_pred, target_names=valid_classes))
     
     # Manual logging ke MLflow (PENTING: tidak menggunakan autolog)
-    # Note: mlflow run sudah membuat run sendiri, jadi tidak perlu start_run() lagi
-    # Cek apakah sudah ada active run (dari mlflow run command)
-    active_run = mlflow.active_run()
-    if active_run is None:
-        # Jika tidak ada active run, buat baru (untuk testing lokal)
+    # Note: mlflow run sudah membuat run sendiri, jadi TIDAK perlu start_run()
+    # Cek apakah dipanggil dari mlflow run (ada env var MLFLOW_RUN_ID)
+    is_mlflow_run = os.getenv("MLFLOW_RUN_ID") is not None
+    
+    if not is_mlflow_run:
+        # Hanya start run jika dipanggil langsung (bukan dari mlflow run)
         mlflow.start_run(run_name="RandomForest_Tuned_Manual")
     
     # Log parameters (manual)
