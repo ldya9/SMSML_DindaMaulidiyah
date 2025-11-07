@@ -12,6 +12,7 @@ import sys
 import argparse
 import mlflow
 import mlflow.sklearn
+from mlflow.tracking import MlflowClient
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
@@ -43,7 +44,11 @@ if os.getenv("MLFLOW_TRACKING_URI"):
 mlflow.set_tracking_uri(tracking_uri)
 
 # Create a new MLflow Experiment untuk tuning
-mlflow.set_experiment("Wine Quality Classification - Tuning - Dinda Maulidiyah")
+# Tapi jangan set experiment jika dipanggil dari mlflow run (sudah di-set oleh mlflow run)
+mlflow_run_id = os.getenv("MLFLOW_RUN_ID")
+if mlflow_run_id is None:
+    # Hanya set experiment jika dipanggil langsung (bukan dari mlflow run)
+    mlflow.set_experiment("Wine Quality Classification - Tuning - Dinda Maulidiyah")
 
 # PENTING: Jangan menggunakan autolog untuk Skilled
 # Kita akan melakukan manual logging
@@ -346,69 +351,66 @@ def main():
     print(classification_report(y_test, y_pred, target_names=valid_classes))
     
     # Manual logging ke MLflow (PENTING: tidak menggunakan autolog)
-    # Note: mlflow run sudah membuat run sendiri, jadi TIDAK perlu start_run()
-    # Cek apakah dipanggil dari mlflow run (ada env var MLFLOW_RUN_ID)
+    # Note: mlflow run sudah membuat run sendiri, jadi perlu resume run yang sudah ada
     mlflow_run_id = os.getenv("MLFLOW_RUN_ID")
     is_mlflow_run = mlflow_run_id is not None
     
-    # PENTING: Jangan start run baru jika dipanggil dari mlflow run
-    # mlflow run sudah membuat run dan set active run context
-    # Jika kita start run baru, akan terjadi conflict
-    if not is_mlflow_run:
-        # Hanya start run jika dipanggil langsung (bukan dari mlflow run)
+    # PENTING: Jika dipanggil dari mlflow run, resume run yang sudah ada
+    # Jangan start run baru karena akan conflict
+    if is_mlflow_run:
+        # Resume run yang sudah dibuat oleh mlflow run
+        print(f"Resuming MLflow run from mlflow run command (ID: {mlflow_run_id})")
+        mlflow.start_run(run_id=mlflow_run_id)
+    else:
+        # Hanya start run baru jika dipanggil langsung (bukan dari mlflow run)
         # Untuk testing lokal saja
         mlflow.start_run(run_name="RandomForest_Tuned_Manual")
-    else:
-        # Jika dipanggil dari mlflow run, pastikan kita menggunakan run yang sudah ada
-        # mlflow.log_param() akan otomatis menggunakan active run dari mlflow run
-        print(f"Using MLflow run from mlflow run command (ID: {mlflow_run_id})")
-        # Verifikasi active run ada
-        active_run = mlflow.active_run()
-        if active_run:
-            print(f"Active run found: {active_run.info.run_id}")
-        else:
-            print("Warning: No active run found, but MLFLOW_RUN_ID is set")
     
-    # Log parameters (manual)
-    print("\n" + "="*60)
-    print("LOGGING KE MLFLOW (MANUAL)")
-    print("="*60)
-    
-    # Log best parameters
-    for param_name, param_value in best_params.items():
-        mlflow.log_param(f"best_{param_name}", param_value)
-    
-    # Log additional parameters
-    mlflow.log_param("model_type", "RandomForestClassifier")
-    mlflow.log_param("test_size", 0.2)
-    mlflow.log_param("random_state", 42)
-    mlflow.log_param("cv_folds", 5)
-    mlflow.log_param("scoring", "accuracy")
-    mlflow.log_param("best_cv_score", grid_search.best_score_)
-    
-    # Log metrics (manual - sama seperti autolog)
-    for metric_name, metric_value in metrics.items():
-        mlflow.log_metric(metric_name, metric_value)
-    
-    # Log model
-    mlflow.sklearn.log_model(best_model, "model")
-    
-    # Log artifacts
-    # Confusion matrix
-    cm_path = os.path.join(script_dir, "confusion_matrix_tuned.png")
-    plot_confusion_matrix(y_test, y_pred, label_encoder, cm_path)
-    mlflow.log_artifact(cm_path, "confusion_matrix")
-    
-    # Feature importance
-    fi_path = os.path.join(script_dir, "feature_importance.png")
-    plot_feature_importance(best_model, X.columns.tolist(), fi_path)
-    mlflow.log_artifact(fi_path, "feature_importance")
-    
-    # Classification report as text
-    report_path = os.path.join(script_dir, "classification_report.txt")
-    with open(report_path, 'w') as f:
-        f.write(classification_report(y_test, y_pred, target_names=valid_classes))
-    mlflow.log_artifact(report_path, "classification_report")
+    try:
+        # Log parameters (manual)
+        print("\n" + "="*60)
+        print("LOGGING KE MLFLOW (MANUAL)")
+        print("="*60)
+        
+        # Log best parameters
+        for param_name, param_value in best_params.items():
+            mlflow.log_param(f"best_{param_name}", param_value)
+        
+        # Log additional parameters
+        mlflow.log_param("model_type", "RandomForestClassifier")
+        mlflow.log_param("test_size", 0.2)
+        mlflow.log_param("random_state", 42)
+        mlflow.log_param("cv_folds", 5)
+        mlflow.log_param("scoring", "accuracy")
+        mlflow.log_param("best_cv_score", grid_search.best_score_)
+        
+        # Log metrics (manual - sama seperti autolog)
+        for metric_name, metric_value in metrics.items():
+            mlflow.log_metric(metric_name, metric_value)
+        
+        # Log model
+        mlflow.sklearn.log_model(best_model, "model")
+        
+        # Log artifacts
+        # Confusion matrix
+        cm_path = os.path.join(script_dir, "confusion_matrix_tuned.png")
+        plot_confusion_matrix(y_test, y_pred, label_encoder, cm_path)
+        mlflow.log_artifact(cm_path, "confusion_matrix")
+        
+        # Feature importance
+        fi_path = os.path.join(script_dir, "feature_importance.png")
+        plot_feature_importance(best_model, X.columns.tolist(), fi_path)
+        mlflow.log_artifact(fi_path, "feature_importance")
+        
+        # Classification report as text
+        report_path = os.path.join(script_dir, "classification_report.txt")
+        with open(report_path, 'w') as f:
+            f.write(classification_report(y_test, y_pred, target_names=valid_classes))
+        mlflow.log_artifact(report_path, "classification_report")
+    finally:
+        # End run jika kita yang start (untuk testing lokal)
+        if not is_mlflow_run:
+            mlflow.end_run()
     
     print("\n" + "="*60)
     print("MODEL TRAINING DAN TUNING SELESAI!")
