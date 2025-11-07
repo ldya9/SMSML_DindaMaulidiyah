@@ -208,28 +208,39 @@ def main():
     # - Metrik (accuracy, dll)
     # - Model artifact
     # - Dependencies
-    with mlflow.start_run(run_name="LogisticRegression_Basic"):
-        model, y_pred = train_model(X_train, y_train, X_test, y_test)
-        
-        # Log model secara eksplisit (meskipun autolog sudah melakukannya)
-        mlflow.sklearn.log_model(model, "model")
-        
-        # Log confusion matrix
-        cm_path = os.path.join(script_dir, "confusion_matrix.png")
-        plot_confusion_matrix(y_test, y_pred, label_encoder, cm_path)
-        mlflow.log_artifact(cm_path, "confusion_matrix")
-        
-        # Log additional info
-        mlflow.log_param("model_type", "LogisticRegression")
-        mlflow.log_param("test_size", 0.2)
-        mlflow.log_param("random_state", 42)
-        
-        print("\n" + "="*60)
-        print("MODEL TRAINING SELESAI!")
-        print("="*60)
-        print(f"MLflow Tracking URI: {mlflow.get_tracking_uri()}")
-        print(f"Experiment: {mlflow.get_experiment_by_name('Wine Quality Classification - Dinda Maulidiyah').name}")
-        print("="*60)
+    # Note: mlflow run sudah membuat run sendiri, jadi tidak perlu start_run() lagi
+    # Cek apakah sudah ada active run (dari mlflow run command)
+    active_run = mlflow.active_run()
+    if active_run is None:
+        # Jika tidak ada active run, buat baru (untuk testing lokal)
+        mlflow.start_run(run_name="LogisticRegression_Basic")
+    
+    model, y_pred = train_model(X_train, y_train, X_test, y_test)
+    
+    # Log model secara eksplisit (meskipun autolog sudah melakukannya)
+    mlflow.sklearn.log_model(model, "model")
+    
+    # Log confusion matrix
+    cm_path = os.path.join(script_dir, "confusion_matrix.png")
+    plot_confusion_matrix(y_test, y_pred, label_encoder, cm_path)
+    mlflow.log_artifact(cm_path, "confusion_matrix")
+    
+    # Log additional info
+    mlflow.log_param("model_type", "LogisticRegression")
+    mlflow.log_param("test_size", 0.2)
+    mlflow.log_param("random_state", 42)
+    
+    print("\n" + "="*60)
+    print("MODEL TRAINING SELESAI!")
+    print("="*60)
+    print(f"MLflow Tracking URI: {mlflow.get_tracking_uri()}")
+    try:
+        exp = mlflow.get_experiment_by_name('Wine Quality Classification - Dinda Maulidiyah')
+        if exp:
+            print(f"Experiment: {exp.name}")
+    except:
+        print("Experiment info not available")
+    print("="*60)
 
 if __name__ == "__main__":
     main()

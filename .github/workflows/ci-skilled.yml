@@ -90,7 +90,7 @@ jobs:
         echo "Checking WineRed_preprocessing directory:"
         ls -la WineRed_preprocessing/ || echo "Directory not found, creating it..."
         mkdir -p WineRed_preprocessing
-        # Check if file exists in different possible locations
+        # Check if file exists in different possible locations and move to correct location
         if [ -f "WineRed_preprocessing/winequality_preprocessed.csv" ]; then
           echo "✅ Dataset file found in WineRed_preprocessing/"
           wc -l WineRed_preprocessing/winequality_preprocessed.csv
@@ -98,10 +98,17 @@ jobs:
           echo "✅ Dataset file found in current directory, moving to WineRed_preprocessing/"
           mv winequality_preprocessed.csv WineRed_preprocessing/
           wc -l WineRed_preprocessing/winequality_preprocessed.csv
+        elif find . -name "winequality_preprocessed.csv" -type f | head -1 | grep -q .; then
+          CSV_FILE=$(find . -name "winequality_preprocessed.csv" -type f | head -1)
+          echo "✅ Dataset file found at: $CSV_FILE, moving to WineRed_preprocessing/"
+          mv "$CSV_FILE" WineRed_preprocessing/
+          wc -l WineRed_preprocessing/winequality_preprocessed.csv
         else
           echo "❌ Dataset file not found!"
           echo "Files in current directory:"
           ls -la
+          echo "Searching for CSV files:"
+          find . -name "*.csv" -type f
           exit 1
         fi
         

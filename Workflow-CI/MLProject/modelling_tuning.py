@@ -346,54 +346,65 @@ def main():
     print(classification_report(y_test, y_pred, target_names=valid_classes))
     
     # Manual logging ke MLflow (PENTING: tidak menggunakan autolog)
-    with mlflow.start_run(run_name="RandomForest_Tuned_Manual"):
-        # Log parameters (manual)
-        print("\n" + "="*60)
-        print("LOGGING KE MLFLOW (MANUAL)")
-        print("="*60)
-        
-        # Log best parameters
-        for param_name, param_value in best_params.items():
-            mlflow.log_param(f"best_{param_name}", param_value)
-        
-        # Log additional parameters
-        mlflow.log_param("model_type", "RandomForestClassifier")
-        mlflow.log_param("test_size", 0.2)
-        mlflow.log_param("random_state", 42)
-        mlflow.log_param("cv_folds", 5)
-        mlflow.log_param("scoring", "accuracy")
-        mlflow.log_param("best_cv_score", grid_search.best_score_)
-        
-        # Log metrics (manual - sama seperti autolog)
-        for metric_name, metric_value in metrics.items():
-            mlflow.log_metric(metric_name, metric_value)
-        
-        # Log model
-        mlflow.sklearn.log_model(best_model, "model")
-        
-        # Log artifacts
-        # Confusion matrix
-        cm_path = os.path.join(script_dir, "confusion_matrix_tuned.png")
-        plot_confusion_matrix(y_test, y_pred, label_encoder, cm_path)
-        mlflow.log_artifact(cm_path, "confusion_matrix")
-        
-        # Feature importance
-        fi_path = os.path.join(script_dir, "feature_importance.png")
-        plot_feature_importance(best_model, X.columns.tolist(), fi_path)
-        mlflow.log_artifact(fi_path, "feature_importance")
-        
-        # Classification report as text
-        report_path = os.path.join(script_dir, "classification_report.txt")
-        with open(report_path, 'w') as f:
-            f.write(classification_report(y_test, y_pred, target_names=valid_classes))
-        mlflow.log_artifact(report_path, "classification_report")
-        
-        print("\n" + "="*60)
-        print("MODEL TRAINING DAN TUNING SELESAI!")
-        print("="*60)
-        print(f"MLflow Tracking URI: {mlflow.get_tracking_uri()}")
-        print(f"Experiment: {mlflow.get_experiment_by_name('Wine Quality Classification - Tuning - Dinda Maulidiyah').name}")
-        print("="*60)
+    # Note: mlflow run sudah membuat run sendiri, jadi tidak perlu start_run() lagi
+    # Cek apakah sudah ada active run (dari mlflow run command)
+    active_run = mlflow.active_run()
+    if active_run is None:
+        # Jika tidak ada active run, buat baru (untuk testing lokal)
+        mlflow.start_run(run_name="RandomForest_Tuned_Manual")
+    
+    # Log parameters (manual)
+    print("\n" + "="*60)
+    print("LOGGING KE MLFLOW (MANUAL)")
+    print("="*60)
+    
+    # Log best parameters
+    for param_name, param_value in best_params.items():
+        mlflow.log_param(f"best_{param_name}", param_value)
+    
+    # Log additional parameters
+    mlflow.log_param("model_type", "RandomForestClassifier")
+    mlflow.log_param("test_size", 0.2)
+    mlflow.log_param("random_state", 42)
+    mlflow.log_param("cv_folds", 5)
+    mlflow.log_param("scoring", "accuracy")
+    mlflow.log_param("best_cv_score", grid_search.best_score_)
+    
+    # Log metrics (manual - sama seperti autolog)
+    for metric_name, metric_value in metrics.items():
+        mlflow.log_metric(metric_name, metric_value)
+    
+    # Log model
+    mlflow.sklearn.log_model(best_model, "model")
+    
+    # Log artifacts
+    # Confusion matrix
+    cm_path = os.path.join(script_dir, "confusion_matrix_tuned.png")
+    plot_confusion_matrix(y_test, y_pred, label_encoder, cm_path)
+    mlflow.log_artifact(cm_path, "confusion_matrix")
+    
+    # Feature importance
+    fi_path = os.path.join(script_dir, "feature_importance.png")
+    plot_feature_importance(best_model, X.columns.tolist(), fi_path)
+    mlflow.log_artifact(fi_path, "feature_importance")
+    
+    # Classification report as text
+    report_path = os.path.join(script_dir, "classification_report.txt")
+    with open(report_path, 'w') as f:
+        f.write(classification_report(y_test, y_pred, target_names=valid_classes))
+    mlflow.log_artifact(report_path, "classification_report")
+    
+    print("\n" + "="*60)
+    print("MODEL TRAINING DAN TUNING SELESAI!")
+    print("="*60)
+    print(f"MLflow Tracking URI: {mlflow.get_tracking_uri()}")
+    try:
+        exp = mlflow.get_experiment_by_name('Wine Quality Classification - Tuning - Dinda Maulidiyah')
+        if exp:
+            print(f"Experiment: {exp.name}")
+    except:
+        print("Experiment info not available")
+    print("="*60)
 
 if __name__ == "__main__":
     main()
