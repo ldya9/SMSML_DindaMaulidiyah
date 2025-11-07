@@ -120,13 +120,12 @@ jobs:
         ls -la
         echo "Checking data file:"
         ls -la WineRed_preprocessing/ || echo "WineRed_preprocessing directory not found"
-        # Run MLflow project dengan verbose output
+        # Run MLflow project
         mlflow run . \
           --entry-point skilled \
           -P mlflow_tracking_uri="file:./mlruns" \
           -P data_path="WineRed_preprocessing/winequality_preprocessed.csv" \
-          --env-manager conda \
-          --verbose
+          --env-manager conda
         
     - name: Get latest MLflow run_id
       id: get_run_id
