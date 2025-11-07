@@ -351,22 +351,17 @@ def main():
     print(classification_report(y_test, y_pred, target_names=valid_classes))
     
     # Manual logging ke MLflow (PENTING: tidak menggunakan autolog)
-    # Note: mlflow run sudah membuat run sendiri, jadi perlu resume run yang sudah ada
+    # Note: mlflow run sudah membuat run sendiri
     mlflow_run_id = os.getenv("MLFLOW_RUN_ID")
     is_mlflow_run = mlflow_run_id is not None
     
-    # PENTING: Jika dipanggil dari mlflow run, resume run yang sudah ada
-    # Jangan start run baru karena akan conflict
+    # PENTING: Jika dipanggil dari mlflow run, gunakan MLflowClient untuk logging langsung
+    # Jangan start run karena akan conflict dengan run yang sudah dibuat mlflow run
     if is_mlflow_run:
-        # Resume run yang sudah dibuat oleh mlflow run
-        print(f"Resuming MLflow run from mlflow run command (ID: {mlflow_run_id})")
-        mlflow.start_run(run_id=mlflow_run_id)
-    else:
-        # Hanya start run baru jika dipanggil langsung (bukan dari mlflow run)
-        # Untuk testing lokal saja
-        mlflow.start_run(run_name="RandomForest_Tuned_Manual")
-    
-    try:
+        # Gunakan MLflowClient untuk logging langsung ke run ID yang sudah ada
+        print(f"Using MLflowClient to log to existing run (ID: {mlflow_run_id})")
+        client = MlflowClient(tracking_uri=mlflow.get_tracking_uri())
+        
         # Log parameters (manual)
         print("\n" + "="*60)
         print("LOGGING KE MLFLOW (MANUAL)")
@@ -374,42 +369,91 @@ def main():
         
         # Log best parameters
         for param_name, param_value in best_params.items():
-            mlflow.log_param(f"best_{param_name}", param_value)
+            client.log_param(mlflow_run_id, f"best_{param_name}", param_value)
         
         # Log additional parameters
-        mlflow.log_param("model_type", "RandomForestClassifier")
-        mlflow.log_param("test_size", 0.2)
-        mlflow.log_param("random_state", 42)
-        mlflow.log_param("cv_folds", 5)
-        mlflow.log_param("scoring", "accuracy")
-        mlflow.log_param("best_cv_score", grid_search.best_score_)
+        client.log_param(mlflow_run_id, "model_type", "RandomForestClassifier")
+        client.log_param(mlflow_run_id, "test_size", 0.2)
+        client.log_param(mlflow_run_id, "random_state", 42)
+        client.log_param(mlflow_run_id, "cv_folds", 5)
+        client.log_param(mlflow_run_id, "scoring", "accuracy")
+        client.log_param(mlflow_run_id, "best_cv_score", grid_search.best_score_)
         
-        # Log metrics (manual - sama seperti autolog)
+        # Log metrics (manual)
         for metric_name, metric_value in metrics.items():
-            mlflow.log_metric(metric_name, metric_value)
+            client.log_metric(mlflow_run_id, metric_name, metric_value)
         
-        # Log model
-        mlflow.sklearn.log_model(best_model, "model")
-        
-        # Log artifacts
-        # Confusion matrix
-        cm_path = os.path.join(script_dir, "confusion_matrix_tuned.png")
-        plot_confusion_matrix(y_test, y_pred, label_encoder, cm_path)
-        mlflow.log_artifact(cm_path, "confusion_matrix")
-        
-        # Feature importance
-        fi_path = os.path.join(script_dir, "feature_importance.png")
-        plot_feature_importance(best_model, X.columns.tolist(), fi_path)
-        mlflow.log_artifact(fi_path, "feature_importance")
-        
-        # Classification report as text
-        report_path = os.path.join(script_dir, "classification_report.txt")
-        with open(report_path, 'w') as f:
-            f.write(classification_report(y_test, y_pred, target_names=valid_classes))
-        mlflow.log_artifact(report_path, "classification_report")
-    finally:
-        # End run jika kita yang start (untuk testing lokal)
-        if not is_mlflow_run:
+        # Log model menggunakan active run context (mlflow run sudah set ini)
+        # Tapi kita perlu set active run dulu untuk log_model
+        mlflow.start_run(run_id=mlflow_run_id)
+        try:
+            mlflow.sklearn.log_model(best_model, "model")
+            
+            # Log artifacts
+            # Confusion matrix
+            cm_path = os.path.join(script_dir, "confusion_matrix_tuned.png")
+            plot_confusion_matrix(y_test, y_pred, label_encoder, cm_path)
+            mlflow.log_artifact(cm_path, "confusion_matrix")
+            
+            # Feature importance
+            fi_path = os.path.join(script_dir, "feature_importance.png")
+            plot_feature_importance(best_model, X.columns.tolist(), fi_path)
+            mlflow.log_artifact(fi_path, "feature_importance")
+            
+            # Classification report as text
+            report_path = os.path.join(script_dir, "classification_report.txt")
+            with open(report_path, 'w') as f:
+                f.write(classification_report(y_test, y_pred, target_names=valid_classes))
+            mlflow.log_artifact(report_path, "classification_report")
+        finally:
+            # Jangan end run - biarkan mlflow run yang handle
+            pass
+    else:
+        # Hanya start run baru jika dipanggil langsung (bukan dari mlflow run)
+        # Untuk testing lokal saja
+        mlflow.start_run(run_name="RandomForest_Tuned_Manual")
+        try:
+            # Log parameters (manual)
+            print("\n" + "="*60)
+            print("LOGGING KE MLFLOW (MANUAL)")
+            print("="*60)
+            
+            # Log best parameters
+            for param_name, param_value in best_params.items():
+                mlflow.log_param(f"best_{param_name}", param_value)
+            
+            # Log additional parameters
+            mlflow.log_param("model_type", "RandomForestClassifier")
+            mlflow.log_param("test_size", 0.2)
+            mlflow.log_param("random_state", 42)
+            mlflow.log_param("cv_folds", 5)
+            mlflow.log_param("scoring", "accuracy")
+            mlflow.log_param("best_cv_score", grid_search.best_score_)
+            
+            # Log metrics (manual - sama seperti autolog)
+            for metric_name, metric_value in metrics.items():
+                mlflow.log_metric(metric_name, metric_value)
+            
+            # Log model
+            mlflow.sklearn.log_model(best_model, "model")
+            
+            # Log artifacts
+            # Confusion matrix
+            cm_path = os.path.join(script_dir, "confusion_matrix_tuned.png")
+            plot_confusion_matrix(y_test, y_pred, label_encoder, cm_path)
+            mlflow.log_artifact(cm_path, "confusion_matrix")
+            
+            # Feature importance
+            fi_path = os.path.join(script_dir, "feature_importance.png")
+            plot_feature_importance(best_model, X.columns.tolist(), fi_path)
+            mlflow.log_artifact(fi_path, "feature_importance")
+            
+            # Classification report as text
+            report_path = os.path.join(script_dir, "classification_report.txt")
+            with open(report_path, 'w') as f:
+                f.write(classification_report(y_test, y_pred, target_names=valid_classes))
+            mlflow.log_artifact(report_path, "classification_report")
+        finally:
             mlflow.end_run()
     
     print("\n" + "="*60)
