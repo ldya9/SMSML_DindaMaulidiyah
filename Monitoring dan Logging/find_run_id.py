@@ -83,7 +83,7 @@ def main():
     mlruns_paths, mlartifacts_paths = find_mlruns_directories()
     
     if not mlruns_paths:
-        print("❌ ERROR: Tidak ditemukan folder mlruns!")
+        print("ERROR: Tidak ditemukan folder mlruns!")
         print()
         print("Pastikan Anda sudah menjalankan modelling.py atau modelling_tuning.py")
         print("dan folder mlruns ada di:")
@@ -91,11 +91,11 @@ def main():
         print("  - atau di folder parent")
         return
     
-    print(f"✅ Ditemukan {len(mlruns_paths)} folder mlruns:")
+    print(f"Ditemukan {len(mlruns_paths)} folder mlruns:")
     for path in mlruns_paths:
         print(f"   - {path}")
     if mlartifacts_paths:
-        print(f"✅ Ditemukan {len(mlartifacts_paths)} folder mlartifacts:")
+        print(f"Ditemukan {len(mlartifacts_paths)} folder mlartifacts:")
         for path in mlartifacts_paths:
             print(f"   - {path}")
     print()
@@ -115,12 +115,12 @@ def main():
         all_runs.extend(runs)
     
     if not all_runs:
-        print("❌ ERROR: Tidak ditemukan run ID di folder mlruns!")
+        print("ERROR: Tidak ditemukan run ID di folder mlruns!")
         print()
         print("Pastikan model sudah di-train dengan benar.")
         return
     
-    print(f"✅ Ditemukan {len(all_runs)} run(s):")
+    print(f"Ditemukan {len(all_runs)} run(s):")
     print()
     print("-" * 60)
     
@@ -134,9 +134,9 @@ def main():
             run_id, run_path = run_info
             model_path = None
         
-        has_model = "✅" if model_path and os.path.exists(model_path) else "❌"
+        has_model = "HAS MODEL" if model_path and os.path.exists(model_path) else "NO MODEL"
         
-        print(f"{idx}. Run ID: {run_id} {has_model}")
+        print(f"{idx}. Run ID: {run_id} ({has_model})")
         print(f"   Path: {run_path}")
         if model_path:
             print(f"   Model: {model_path}")
@@ -159,7 +159,7 @@ def main():
             break
     
     if recommended:
-        print("🎯 REKOMENDASI RUN ID (terbaru dengan model):")
+        print("REKOMENDASI RUN ID (terbaru dengan model):")
         print(f"   {recommended}")
         print()
         print("Copy run_id ini untuk digunakan di serve_model.py atau serve_model_direct.py")
@@ -167,7 +167,7 @@ def main():
         print("Contoh penggunaan:")
         print(f'   python serve_model_direct.py --run-id {recommended}')
     else:
-        print("⚠️  PERINGATAN: Tidak ada run yang memiliki model artifact!")
+        print("PERINGATAN: Tidak ada run yang memiliki model artifact!")
         print("   Pastikan model sudah di-save dengan benar saat training.")
 
 if __name__ == '__main__':

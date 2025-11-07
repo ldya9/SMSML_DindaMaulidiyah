@@ -1,0 +1,15 @@
+Tautan GitHub: https://github.com/ldya9/SMSML_DindaMaulidiyah/tree/main/Workflow-CI
+
+Struktur folder dan berkas pada repository GitHub:
+
+Workflow-CI
+├── .workflow
+└── MLProject
+    └── modelling.py
+    └── conda.yaml
+    └── MLProject
+    └── WineRed_preprocessing
+        └── winequality_preprocessed.csv
+    └── Tautan ke Docker Hub: [MASUKKAN_TAUTAN_DOCKER_HUB_DISINI]
+    └── (file tambahan jika diperlukan)
+

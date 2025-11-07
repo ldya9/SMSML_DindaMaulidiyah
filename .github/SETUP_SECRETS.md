@@ -1,19 +1,19 @@
-# 🔐 Setup Secrets untuk CI/CD Workflow
+# Setup Secrets untuk CI/CD Workflow
 
-## 📋 Overview
+## Overview
 
 Dokumentasi ini menjelaskan cara mengatur secrets di GitHub untuk workflow CI/CD, terutama jika Anda ingin menggunakan fitur upload ke Google Drive atau storage eksternal lainnya.
 
-## 🚀 Setup Dasar (Tidak Memerlukan Secrets)
+## Setup Dasar (Tidak Memerlukan Secrets)
 
 **Workflow Basic dan Skilled** yang sudah dibuat **TIDAK memerlukan secrets** untuk:
-- ✅ Run preprocessing
-- ✅ Run modelling
-- ✅ Upload artifacts ke GitHub Actions
+- Run preprocessing
+- Run modelling
+- Upload artifacts ke GitHub Actions
 
 Artifacts akan otomatis tersimpan di GitHub Actions dan dapat diunduh selama 30 hari (model artifacts) dan 7 hari (preprocessed data).
 
-## 🔑 Setup Secrets (Opsional - untuk Upload External)
+## Setup Secrets (Opsional - untuk Upload External)
 
 Jika Anda ingin upload artifacts ke Google Drive atau storage eksternal, ikuti langkah berikut:
 
@@ -75,7 +75,7 @@ Jika Anda ingin menggunakan GitHub LFS untuk menyimpan model files yang besar:
 
 **Tidak diperlukan secrets tambahan** untuk GitHub LFS.
 
-## ✅ Verifikasi Setup
+## Verifikasi Setup
 
 1. **Test workflow:**
    - Buka tab **Actions** di repository GitHub
@@ -89,14 +89,14 @@ Jika Anda ingin menggunakan GitHub LFS untuk menyimpan model files yang besar:
    - Scroll ke bawah ke bagian **Artifacts**
    - Download artifacts untuk memverifikasi
 
-## 📝 Catatan Penting
+## Catatan Penting
 
-- ⚠️ **Jangan commit secrets ke repository!**
-- 🔒 Secrets hanya dapat dilihat oleh repository owner dan collaborators dengan akses
-- 🗑️ Secrets dapat dihapus atau diupdate kapan saja
-- 📦 Artifacts di GitHub Actions akan otomatis terhapus setelah retention period (7-30 hari)
+- **Jangan commit secrets ke repository!**
+- Secrets hanya dapat dilihat oleh repository owner dan collaborators dengan akses
+- Secrets dapat dihapus atau diupdate kapan saja
+- Artifacts di GitHub Actions akan otomatis terhapus setelah retention period (7-30 hari)
 
-## 🆘 Troubleshooting
+## Troubleshooting
 
 ### Workflow gagal di step "Run modelling"
 
@@ -120,7 +120,7 @@ Jika Anda ingin menggunakan GitHub LFS untuk menyimpan model files yang besar:
 - Workflow sudah di-configure untuk menggunakan `file:./mlruns`
 - Tidak perlu setup MLflow server di GitHub Actions
 
-## 📚 Referensi
+## Referensi
 
 - [GitHub Actions Documentation](https://docs.github.com/en/actions)
 - [GitHub Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets)

@@ -1,0 +1,13 @@
+Tautan GitHub: https://github.com/ldya9/Eksperimen_SML_Dinda-Maulidiyah/tree/main/Eksperimen_SML_DindaMaulidiyah
+
+Struktur folder dan berkas pada repository GitHub:
+
+Eksperimen_SML_DindaMaulidiyah
+├── RedWine_raw
+│   └── winequality-red.csv
+└── preprocessing
+    └── Eksperimen_Dinda_Maulidiyah.ipynb
+    └── automate_DindaMaulidiyah.py
+    └── WineRed_preprocessing
+        └── winequality_preprocessed.csv
+

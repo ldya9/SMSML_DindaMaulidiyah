@@ -1,27 +1,27 @@
-# 📋 GitHub Actions Workflows
+# GitHub Actions Workflows
 
 Repository ini berisi workflow CI/CD untuk automation pipeline machine learning.
 
-## 📁 Workflows yang Tersedia
+## Workflows yang Tersedia
 
 ### 1. `ci-basic.yml` - Basic Workflow
 
 Workflow untuk **Basic (2 pts)** yang mencakup:
-- ✅ Install dependencies
-- ✅ Run preprocessing (`automate_DindaMaulidiyah.py`)
-- ✅ Run modelling (`modelling.py`) dengan MLflow autolog
-- ✅ Upload artifacts ke GitHub Actions
+- Install dependencies
+- Run preprocessing (`automate_DindaMaulidiyah.py`)
+- Run modelling (`modelling.py`) dengan MLflow autolog
+- Upload artifacts ke GitHub Actions
 
 ### 2. `ci-skilled.yml` - Skilled Workflow
 
 Workflow untuk **Skilled (3 pts)** yang mencakup:
-- ✅ Install dependencies
-- ✅ Run preprocessing (`automate_DindaMaulidiyah.py`)
-- ✅ Run modelling dengan hyperparameter tuning (`modelling_tuning.py`) dengan manual logging MLflow
-- ✅ Upload artifacts ke GitHub Actions
-- 🔄 Opsional: Upload ke Google Drive (dengan konfigurasi secrets)
+- Install dependencies
+- Run preprocessing (`automate_DindaMaulidiyah.py`)
+- Run modelling dengan hyperparameter tuning (`modelling_tuning.py`) dengan manual logging MLflow
+- Upload artifacts ke GitHub Actions
+- Opsional: Upload ke Google Drive (dengan konfigurasi secrets)
 
-## 🚀 Cara Menggunakan
+## Cara Menggunakan
 
 ### Trigger Otomatis
 Workflow akan otomatis berjalan ketika:
@@ -34,7 +34,7 @@ Workflow akan otomatis berjalan ketika:
 3. Klik **Run workflow**
 4. Pilih branch dan klik **Run workflow**
 
-## 📦 Artifacts
+## Artifacts
 
 Setelah workflow selesai, artifacts dapat diunduh dari:
 - **Preprocessed Data:** Retained selama 7 hari
@@ -46,7 +46,7 @@ Cara download:
 3. Scroll ke bagian **Artifacts**
 4. Klik nama artifact untuk download
 
-## ⚙️ Konfigurasi
+## Konfigurasi
 
 ### MLflow Tracking URI
 
@@ -72,11 +72,11 @@ Dependencies diinstall dari:
 - `Membangun_model/requirements.txt`
 - Preprocessing dependencies diinstall secara eksplisit
 
-## 🔐 Secrets (Opsional)
+## Secrets (Opsional)
 
 Untuk upload ke Google Drive, lihat [SETUP_SECRETS.md](../SETUP_SECRETS.md).
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Workflow gagal di step "Run preprocessing"
 
@@ -104,7 +104,7 @@ Untuk upload ke Google Drive, lihat [SETUP_SECRETS.md](../SETUP_SECRETS.md).
 - Workflow sudah mengubah tracking URI secara otomatis
 - Pastikan tidak ada error di log MLflow
 
-## 📝 Notes
+## Notes
 
 - Workflow akan berjalan di Ubuntu latest
 - Setiap job berjalan di environment yang fresh
