@@ -26,15 +26,26 @@ jobs:
         python -m pip install --upgrade pip
         pip install pandas>=2.1.0 numpy>=1.26.0 scikit-learn>=1.3.0
         
-    - name: Run preprocessing
+    - name: Download raw dataset
       run: |
-        python Eksperimen_SML_DindaMaulidiyah/preprocessing/automate_DindaMaulidiyah.py
+        mkdir -p Workflow-CI/RedWine_raw
+        # Download dataset jika belum ada di repo
+        if [ ! -f "Workflow-CI/RedWine_raw/winequality-red.csv" ]; then
+          echo "Downloading wine quality dataset..."
+          wget -O Workflow-CI/RedWine_raw/winequality-red.csv \
+            https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv
+        fi
+        
+    - name: Run preprocessing
+      working-directory: Workflow-CI
+      run: |
+        python preprocessing.py
         
     - name: Upload preprocessing artifacts
       uses: actions/upload-artifact@v4
       with:
         name: preprocessed-data
-        path: Eksperimen_SML_DindaMaulidiyah/preprocessing/WineRed_preprocessing/winequality_preprocessed.csv
+        path: Workflow-CI/MLProject/WineRed_preprocessing/winequality_preprocessed.csv
         retention-days: 7
 
   modelling:
@@ -59,7 +70,9 @@ jobs:
         wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
         bash miniconda.sh -b -p $HOME/miniconda
         export PATH="$HOME/miniconda/bin:$PATH"
+        conda init bash
         conda --version
+        echo "$HOME/miniconda/bin" >> $GITHUB_PATH
         
     - name: Download preprocessing artifacts
       uses: actions/download-artifact@v4
@@ -84,21 +97,30 @@ jobs:
         echo "Python version: $(python --version)"
         echo "MLflow version: $(mlflow --version)"
         echo "Working directory: $(pwd)"
+        echo "Conda path: $(which conda)"
+        echo "Conda version: $(conda --version)"
         
     - name: Set MLflow Tracking URI
       run: |
-        export PATH="$HOME/miniconda/bin:$PATH"
         export MLFLOW_TRACKING_URI="file:./mlruns"
         echo "MLFLOW_TRACKING_URI=$MLFLOW_TRACKING_URI" >> $GITHUB_ENV
-        echo "PATH=$PATH" >> $GITHUB_ENV
         
     - name: Run mlflow project
       working-directory: Workflow-CI/MLProject
+      env:
+        PATH: ${{ env.PATH }}:$HOME/miniconda/bin
+        MLFLOW_TRACKING_URI: file:./mlruns
       run: |
+        # Ensure conda is in PATH
         export PATH="$HOME/miniconda/bin:$PATH"
+        # Verify conda is accessible
+        which conda
+        conda --version
+        # Run MLflow project
         mlflow run . --entry-point basic \
           -P mlflow_tracking_uri="file:./mlruns" \
-          -P data_path="WineRed_preprocessing/winequality_preprocessed.csv"
+          -P data_path="WineRed_preprocessing/winequality_preprocessed.csv" \
+          --env-manager conda
         
     - name: Get latest MLflow run_id
       id: get_run_id
