@@ -406,14 +406,22 @@ def main():
         client.log_artifact(mlflow_run_id, fi_path, "feature_importance")
         client.log_artifact(mlflow_run_id, report_path, "classification_report")
         
-        # Log model - perlu start run sementara untuk log_model
-        # Tapi kita akan end run segera setelah log model
-        mlflow.start_run(run_id=mlflow_run_id)
+        # Log model menggunakan save_model dan upload artifact
+        # Ini menghindari perlu start/end run yang bisa menyebabkan conflict
+        import tempfile
+        import shutil
+        
+        # Save model ke temporary directory
+        temp_model_dir = tempfile.mkdtemp()
         try:
-            mlflow.sklearn.log_model(best_model, "model")
+            model_path = os.path.join(temp_model_dir, "model")
+            mlflow.sklearn.save_model(best_model, model_path)
+            
+            # Upload model sebagai artifact menggunakan client
+            client.log_artifacts(mlflow_run_id, temp_model_dir, "model")
         finally:
-            # End run segera setelah log model untuk menghindari conflict
-            mlflow.end_run()
+            # Cleanup temporary directory
+            shutil.rmtree(temp_model_dir, ignore_errors=True)
     else:
         # Hanya start run baru jika dipanggil langsung (bukan dari mlflow run)
         # Untuk testing lokal saja
