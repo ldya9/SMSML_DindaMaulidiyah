@@ -348,11 +348,26 @@ def main():
     # Manual logging ke MLflow (PENTING: tidak menggunakan autolog)
     # Note: mlflow run sudah membuat run sendiri, jadi TIDAK perlu start_run()
     # Cek apakah dipanggil dari mlflow run (ada env var MLFLOW_RUN_ID)
-    is_mlflow_run = os.getenv("MLFLOW_RUN_ID") is not None
+    mlflow_run_id = os.getenv("MLFLOW_RUN_ID")
+    is_mlflow_run = mlflow_run_id is not None
     
+    # PENTING: Jangan start run baru jika dipanggil dari mlflow run
+    # mlflow run sudah membuat run dan set active run context
+    # Jika kita start run baru, akan terjadi conflict
     if not is_mlflow_run:
         # Hanya start run jika dipanggil langsung (bukan dari mlflow run)
+        # Untuk testing lokal saja
         mlflow.start_run(run_name="RandomForest_Tuned_Manual")
+    else:
+        # Jika dipanggil dari mlflow run, pastikan kita menggunakan run yang sudah ada
+        # mlflow.log_param() akan otomatis menggunakan active run dari mlflow run
+        print(f"Using MLflow run from mlflow run command (ID: {mlflow_run_id})")
+        # Verifikasi active run ada
+        active_run = mlflow.active_run()
+        if active_run:
+            print(f"Active run found: {active_run.info.run_id}")
+        else:
+            print("Warning: No active run found, but MLFLOW_RUN_ID is set")
     
     # Log parameters (manual)
     print("\n" + "="*60)
