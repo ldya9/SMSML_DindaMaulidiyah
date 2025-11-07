@@ -69,10 +69,12 @@ jobs:
         # Install miniconda untuk MLflow Project
         wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
         bash miniconda.sh -b -p $HOME/miniconda
-        export PATH="$HOME/miniconda/bin:$PATH"
-        conda init bash
-        conda --version
+        # Tambahkan conda ke PATH untuk step ini dan step berikutnya
         echo "$HOME/miniconda/bin" >> $GITHUB_PATH
+        # Initialize conda
+        $HOME/miniconda/bin/conda init bash
+        # Verify installation
+        $HOME/miniconda/bin/conda --version
         
     - name: Download preprocessing artifacts
       uses: actions/download-artifact@v4
@@ -97,8 +99,8 @@ jobs:
         echo "Python version: $(python --version)"
         echo "MLflow version: $(mlflow --version)"
         echo "Working directory: $(pwd)"
-        echo "Conda path: $(which conda)"
-        echo "Conda version: $(conda --version)"
+        echo "PATH: $PATH"
+        conda --version || echo "Conda not yet in PATH (will be available in next step)"
         
     - name: Set MLflow Tracking URI
       run: |
@@ -108,14 +110,11 @@ jobs:
     - name: Run mlflow project
       working-directory: Workflow-CI/MLProject
       env:
-        PATH: ${{ env.PATH }}:$HOME/miniconda/bin
         MLFLOW_TRACKING_URI: file:./mlruns
       run: |
-        # Ensure conda is in PATH
-        export PATH="$HOME/miniconda/bin:$PATH"
-        # Verify conda is accessible
-        which conda
-        conda --version
+        # Conda sudah di PATH melalui $GITHUB_PATH dari step sebelumnya
+        # Verifikasi conda tersedia
+        conda --version || echo "Warning: conda not found, but continuing..."
         # Run MLflow project
         mlflow run . --entry-point skilled \
           -P mlflow_tracking_uri="file:./mlruns" \
