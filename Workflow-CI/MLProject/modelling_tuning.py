@@ -383,31 +383,37 @@ def main():
         for metric_name, metric_value in metrics.items():
             client.log_metric(mlflow_run_id, metric_name, metric_value)
         
-        # Log model menggunakan active run context (mlflow run sudah set ini)
-        # Tapi kita perlu set active run dulu untuk log_model
+        # Log model dan artifacts menggunakan MLflowClient
+        # Jangan start run karena akan conflict dengan run yang sudah ada
+        # Gunakan client untuk log model dan artifacts
+        
+        # Prepare artifacts first
+        # Confusion matrix
+        cm_path = os.path.join(script_dir, "confusion_matrix_tuned.png")
+        plot_confusion_matrix(y_test, y_pred, label_encoder, cm_path)
+        
+        # Feature importance
+        fi_path = os.path.join(script_dir, "feature_importance.png")
+        plot_feature_importance(best_model, X.columns.tolist(), fi_path)
+        
+        # Classification report as text
+        report_path = os.path.join(script_dir, "classification_report.txt")
+        with open(report_path, 'w') as f:
+            f.write(classification_report(y_test, y_pred, target_names=valid_classes))
+        
+        # Log artifacts menggunakan client
+        client.log_artifact(mlflow_run_id, cm_path, "confusion_matrix")
+        client.log_artifact(mlflow_run_id, fi_path, "feature_importance")
+        client.log_artifact(mlflow_run_id, report_path, "classification_report")
+        
+        # Log model - perlu start run sementara untuk log_model
+        # Tapi kita akan end run segera setelah log model
         mlflow.start_run(run_id=mlflow_run_id)
         try:
             mlflow.sklearn.log_model(best_model, "model")
-            
-            # Log artifacts
-            # Confusion matrix
-            cm_path = os.path.join(script_dir, "confusion_matrix_tuned.png")
-            plot_confusion_matrix(y_test, y_pred, label_encoder, cm_path)
-            mlflow.log_artifact(cm_path, "confusion_matrix")
-            
-            # Feature importance
-            fi_path = os.path.join(script_dir, "feature_importance.png")
-            plot_feature_importance(best_model, X.columns.tolist(), fi_path)
-            mlflow.log_artifact(fi_path, "feature_importance")
-            
-            # Classification report as text
-            report_path = os.path.join(script_dir, "classification_report.txt")
-            with open(report_path, 'w') as f:
-                f.write(classification_report(y_test, y_pred, target_names=valid_classes))
-            mlflow.log_artifact(report_path, "classification_report")
         finally:
-            # Jangan end run - biarkan mlflow run yang handle
-            pass
+            # End run segera setelah log model untuk menghindari conflict
+            mlflow.end_run()
     else:
         # Hanya start run baru jika dipanggil langsung (bukan dari mlflow run)
         # Untuk testing lokal saja
